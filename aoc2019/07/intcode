@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+from itertools import *
+from sys import argv, stdin, stdout
+
+
+def getValue(memory, mode, add):
+    if mode == 0:
+        return memory[add]
+    elif mode == 1:
+        return add
+
+    raise 'unexpected mode'
+
+
+def execute(program):
+    memory = program.copy()
+
+    op = 0
+    opcode = memory[op] % 100
+    modes = memory[op] // 100
+    mode1 = modes % 10
+    mode2 = (modes // 10) % 10
+
+    while opcode != 99:
+        if opcode == 1:
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            add3 = memory[op + 3]
+            memory[add3] = getValue(memory, mode1, add1) + getValue(memory, mode2, add2) 
+            op = op + 4
+        elif opcode == 2:
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            add3 = memory[op + 3]
+            memory[add3] = getValue(memory, mode1, add1) * getValue(memory, mode2, add2) 
+            op = op + 4
+        elif opcode == 3: # input
+            add1 = memory[op + 1]
+            memory[add1] = int(input())
+            op = op + 2
+        elif opcode == 4: # print
+            add1 = memory[op + 1]
+            print(getValue(memory, mode1, add1))
+            op = op + 2
+        elif opcode == 5: # jump if true
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            if getValue(memory, mode1, add1) > 0:
+                op = getValue(memory, mode2, add2)
+            else:
+                op = op + 3
+        elif opcode == 6: # jump if false
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            if getValue(memory, mode1, add1) == 0:
+                op = getValue(memory, mode2, add2)
+            else:
+                op = op + 3
+        elif opcode == 7: # less than
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            add3 = memory[op + 3]
+            memory[add3] = 1 if getValue(memory, mode1, add1) < getValue(memory, mode2, add2) else 0
+            op = op + 4
+        elif opcode == 8: # equals
+            add1 = memory[op + 1]
+            add2 = memory[op + 2]
+            add3 = memory[op + 3]
+            memory[add3] = 1 if getValue(memory, mode1, add1) == getValue(memory, mode2, add2) else 0
+            op = op + 4
+
+        opcode = memory[op] % 100
+        modes = memory[op] // 100
+        mode1 = modes % 10
+        mode2 = (modes // 10) % 10
+
+    stdin.close()
+    stdout.close()
+
+with open(argv[1]) as program:
+    memory = [int(opcode) for opcode in program.read().split(',')]
+
+    execute(memory)
