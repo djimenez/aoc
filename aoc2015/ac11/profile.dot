@@ -1,0 +1,20 @@
+digraph "ac11.exe" {
+node [style=filled fillcolor="#f8f8f8"]
+subgraph cluster_L { L [shape=box fontsize=32 label="File: ac11.exe\lType: cpu\l83.97s of 84.67s total (99.17%)\lDropped 22 nodes (cum <= 0.42s)\l"] }
+N1 [label="main.check\n54.98s(64.93%)" fontsize=24 shape=box tooltip="main.check (54.98s)"]
+N2 [label="main.inc\n15.18s(17.93%)" fontsize=17 shape=box tooltip="main.inc (15.18s)"]
+N3 [label="main.main\n13.38s(15.80%)\nof 83.53s(98.65%)" fontsize=16 shape=box tooltip="main.main (83.53s)"]
+N4 [label="runtime.newstack\n0.28s(0.33%)\nof 1.10s(1.30%)" fontsize=10 shape=box tooltip="runtime.newstack (1.10s)"]
+N5 [label="runtime.gopreempt_m\n0.07s(0.083%)\nof 0.50s(0.59%)" fontsize=9 shape=box tooltip="runtime.gopreempt_m (0.50s)"]
+N6 [label="runtime.goschedImpl\n0.07s(0.083%)\nof 0.43s(0.51%)" fontsize=9 shape=box tooltip="runtime.goschedImpl (0.43s)"]
+N7 [label="runtime.morestack\n0.01s(0.012%)\nof 1.11s(1.31%)" fontsize=9 shape=box tooltip="runtime.morestack (1.11s)"]
+N8 [label="runtime.goexit\n0 of 83.53s(98.65%)" fontsize=8 shape=box tooltip="runtime.goexit (83.53s)"]
+N9 [label="runtime.main\n0 of 83.53s(98.65%)" fontsize=8 shape=box tooltip="runtime.main (83.53s)"]
+N8 -> N9 [label=" 83.53s" weight=99 penwidth=5 tooltip="runtime.goexit -> runtime.main (83.53s)" labeltooltip="runtime.goexit -> runtime.main (83.53s)"]
+N9 -> N3 [label=" 83.53s" weight=99 penwidth=5 tooltip="runtime.main -> main.main (83.53s)" labeltooltip="runtime.main -> main.main (83.53s)"]
+N3 -> N1 [label=" 54.98s" weight=65 penwidth=4 tooltip="main.main -> main.check (54.98s)" labeltooltip="main.main -> main.check (54.98s)"]
+N3 -> N2 [label=" 15.17s" weight=18 tooltip="main.main -> main.inc (15.17s)" labeltooltip="main.main -> main.inc (15.17s)"]
+N7 -> N4 [label=" 1.10s" weight=2 tooltip="runtime.morestack -> runtime.newstack (1.10s)" labeltooltip="runtime.morestack -> runtime.newstack (1.10s)"]
+N4 -> N5 [label=" 0.50s" tooltip="runtime.newstack -> runtime.gopreempt_m (0.50s)" labeltooltip="runtime.newstack -> runtime.gopreempt_m (0.50s)"]
+N5 -> N6 [label=" 0.43s" tooltip="runtime.gopreempt_m -> runtime.goschedImpl (0.43s)" labeltooltip="runtime.gopreempt_m -> runtime.goschedImpl (0.43s)"]
+}
