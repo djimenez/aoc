@@ -4,11 +4,11 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
-//mod day5;
+mod day5;
 mod day6;
-/*
 mod day7;
 mod day8;
+/*
 mod day9;
 mod day10;
 mod day11;
@@ -23,8 +23,8 @@ mod day19;
 mod day20;
 */
 mod day21;
-/*
 mod day22;
+/*
 mod day23;
 mod day24;
 mod day25;
@@ -41,13 +41,11 @@ fn main() {
         "day2" => day2::run(),
         "day3" => day3::run(),
         "day4" => day4::run(),
-        /*
         "day5" => day5::run(),
-        */
         "day6" => day6::run(),
-        /*
         "day7" => day7::run(),
         "day8" => day8::run(),
+        /*
         "day9" => day9::run(),
         "day10" => day10::run(),
         "day11" => day11::run(),
@@ -62,8 +60,8 @@ fn main() {
         "day20" => day20::run(),
         */
         "day21" => day21::run(),
-        /*
         "day22" => day22::run(),
+        /*
         "day23" => day23::run(),
         "day24" => day24::run(),
         "day25" => day25::run(),
