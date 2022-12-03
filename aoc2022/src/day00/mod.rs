@@ -6,23 +6,22 @@ pub fn run() {
 }
 
 fn part1(input: &str) -> u64 {
-    let values = parse_input(input);
+    let _values = parse_input(input);
 
-    values.iter().sum()
+    0
 }
 
 fn part2(input: &str) -> u64 {
-    let values = parse_input(input);
+    let _values = parse_input(input);
 
-    values.iter().sum()
+    0
 }
 
-fn parse_input(input: &str) -> Vec<u64> {
+fn parse_input(input: &str) -> Vec<&str> {
     input
         .lines()
         .map(|line| line.trim_end())
-        .filter(|line| !line.is_empty())
-        .map(|line| line.parse().unwrap())
+        // do the thing
         .collect()
 }
 
