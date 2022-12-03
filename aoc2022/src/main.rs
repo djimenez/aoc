@@ -2,6 +2,7 @@ use std::env;
 
 mod day00;
 mod day01;
+mod day02;
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -14,6 +15,7 @@ fn main() {
     match day {
         0 => day00::run(),
         1 => day01::run(),
+        2 => day02::run(),
 
         other => println!("{} was not recognized or is unimplemented", other),
     }
