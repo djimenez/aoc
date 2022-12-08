@@ -52,7 +52,7 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<(usize, usize, usize)>) {
     let instructions = sections.next().unwrap();
 
     // simpler to parse crates in reverse line order
-    let mut crate_lines = crates.lines().rev().map(|line| line.trim_end());
+    let mut crate_lines = crates.lines().rev();
 
     // the first (reversed) line will tell us how many stacks there are
     let stack_ids: Vec<&str> = crate_lines.next().unwrap().split_whitespace().collect();
@@ -79,7 +79,7 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<(usize, usize, usize)>) {
     let parsed_instructions = instructions
         .lines()
         .map(|instruction| {
-            parts.extend(instruction.trim_end().split_whitespace());
+            parts.extend(instruction.split_whitespace());
 
             let count = parts[1].parse::<usize>().unwrap();
             let from = parts[3].parse::<usize>().unwrap() - 1;

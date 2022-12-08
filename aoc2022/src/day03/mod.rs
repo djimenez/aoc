@@ -66,7 +66,7 @@ fn part2(input: &str) -> u64 {
 }
 
 fn parse_input(input: &str) -> Vec<&str> {
-    input.lines().map(|line| line.trim_end()).collect()
+    input.lines().collect()
 }
 
 fn compute_priority(c: char) -> u64 {

@@ -20,7 +20,6 @@ fn part2(input: &str) -> u64 {
 fn parse_input(input: &str) -> Vec<&str> {
     input
         .lines()
-        .map(|line| line.trim_end())
         // do the thing
         .collect()
 }

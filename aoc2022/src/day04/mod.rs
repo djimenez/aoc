@@ -55,7 +55,7 @@ fn parse_input(input: &str) -> Vec<Pair> {
 }
 
 fn parse_line(input: &str) -> Option<Pair> {
-    let mut ranges = input.trim_end().split(",");
+    let mut ranges = input.split(",");
     let (first_start, first_end) = parse_range(ranges.next()?)?;
     let (second_start, second_end) = parse_range(ranges.next()?)?;
 
