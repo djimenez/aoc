@@ -1,6 +1,6 @@
+use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::HashSet;
-use std::cmp::Ordering;
 
 const DEFAULT_INPUT: &str = include_str!("input");
 
@@ -32,17 +32,14 @@ struct Map {
     start: Coord,
     end: Coord,
 
-    elevations: Vec<Vec<char>>
+    elevations: Vec<Vec<char>>,
 }
 
 fn parse_input(input: &str) -> Map {
-    let mut elevations: Vec<Vec<char>> = input
-        .lines()
-        .map(|line| line.chars().collect())
-        .collect();
-    
-    let mut start: Coord = Coord {x: 0, y: 0};
-    let mut end: Coord = Coord {x: 0, y: 0};
+    let mut elevations: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+
+    let mut start: Coord = Coord { x: 0, y: 0 };
+    let mut end: Coord = Coord { x: 0, y: 0 };
 
     for (y, row) in elevations.iter().enumerate() {
         for (x, chr) in row.iter().enumerate() {
@@ -91,7 +88,10 @@ fn find_path(map: &Map) -> Option<usize> {
     //let mut distances = HashMap::new();
     let mut visited = HashSet::new();
 
-    heap.push(Candidate { coord: map.start, steps: 0 });
+    heap.push(Candidate {
+        coord: map.start,
+        steps: 0,
+    });
 
     while let Some(candidate) = heap.pop() {
         if candidate.coord == map.end {
@@ -104,53 +104,65 @@ fn find_path(map: &Map) -> Option<usize> {
         let current_elevation = map.elevations[y][x];
 
         if candidate.coord.y > 0 {
-            let north_coord = Coord {x, y: y - 1};
+            let north_coord = Coord { x, y: y - 1 };
 
             if !visited.contains(&north_coord) {
                 let north_elevation = map.elevations[y - 1][x];
 
                 if current_elevation as u32 + 1 >= north_elevation as u32 {
                     visited.insert(north_coord);
-                    heap.push(Candidate { coord: north_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: north_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if candidate.coord.y < map.elevations.len() - 1 {
-            let south_coord = Coord { x, y: y + 1};
+            let south_coord = Coord { x, y: y + 1 };
 
             if !visited.contains(&south_coord) {
                 let south_elevation = map.elevations[y + 1][x];
 
                 if current_elevation as u32 + 1 >= south_elevation as u32 {
                     visited.insert(south_coord);
-                    heap.push(Candidate { coord: south_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: south_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if candidate.coord.x > 0 {
-            let west_coord = Coord {x: x - 1, y};
+            let west_coord = Coord { x: x - 1, y };
 
             if !visited.contains(&west_coord) {
                 let west_elevation = map.elevations[y][x - 1];
 
                 if current_elevation as u32 + 1 >= west_elevation as u32 {
                     visited.insert(west_coord);
-                    heap.push(Candidate { coord: west_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: west_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if x < map.elevations[y].len() - 1 {
-            let east_coord = Coord { x: x + 1, y};
+            let east_coord = Coord { x: x + 1, y };
 
             if !visited.contains(&east_coord) {
                 let east_elevation = map.elevations[y][x + 1];
 
                 if current_elevation as u32 + 1 >= east_elevation as u32 {
                     visited.insert(east_coord);
-                    heap.push(Candidate { coord: east_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: east_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
@@ -162,7 +174,7 @@ fn find_path(map: &Map) -> Option<usize> {
             .iter()
             .enumerate()
             .map(|(x, chr)| {
-                let coord = Coord { x, y};
+                let coord = Coord { x, y };
 
                 if visited.contains(&coord) {
                     '#'
@@ -183,7 +195,10 @@ fn find_closest_start(map: &Map) -> Option<usize> {
     //let mut distances = HashMap::new();
     let mut visited = HashSet::new();
 
-    heap.push(Candidate { coord: map.end, steps: 0 });
+    heap.push(Candidate {
+        coord: map.end,
+        steps: 0,
+    });
 
     while let Some(candidate) = heap.pop() {
         // generate new candidates from this one
@@ -195,53 +210,65 @@ fn find_closest_start(map: &Map) -> Option<usize> {
         }
 
         if candidate.coord.y > 0 {
-            let north_coord = Coord {x, y: y - 1};
+            let north_coord = Coord { x, y: y - 1 };
 
             if !visited.contains(&north_coord) {
                 let north_elevation = map.elevations[y - 1][x];
 
                 if current_elevation as u32 <= 1 + north_elevation as u32 {
                     visited.insert(north_coord);
-                    heap.push(Candidate { coord: north_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: north_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if candidate.coord.y < map.elevations.len() - 1 {
-            let south_coord = Coord { x, y: y + 1};
+            let south_coord = Coord { x, y: y + 1 };
 
             if !visited.contains(&south_coord) {
                 let south_elevation = map.elevations[y + 1][x];
 
                 if current_elevation as u32 <= 1 + south_elevation as u32 {
                     visited.insert(south_coord);
-                    heap.push(Candidate { coord: south_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: south_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if candidate.coord.x > 0 {
-            let west_coord = Coord {x: x - 1, y};
+            let west_coord = Coord { x: x - 1, y };
 
             if !visited.contains(&west_coord) {
                 let west_elevation = map.elevations[y][x - 1];
 
                 if current_elevation as u32 <= 1 + west_elevation as u32 {
                     visited.insert(west_coord);
-                    heap.push(Candidate { coord: west_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: west_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
 
         if x < map.elevations[y].len() - 1 {
-            let east_coord = Coord { x: x + 1, y};
+            let east_coord = Coord { x: x + 1, y };
 
             if !visited.contains(&east_coord) {
                 let east_elevation = map.elevations[y][x + 1];
 
                 if current_elevation as u32 <= 1 + east_elevation as u32 {
                     visited.insert(east_coord);
-                    heap.push(Candidate { coord: east_coord, steps: candidate.steps + 1 });
+                    heap.push(Candidate {
+                        coord: east_coord,
+                        steps: candidate.steps + 1,
+                    });
                 }
             }
         }
@@ -253,7 +280,7 @@ fn find_closest_start(map: &Map) -> Option<usize> {
             .iter()
             .enumerate()
             .map(|(x, chr)| {
-                let coord = Coord { x, y};
+                let coord = Coord { x, y };
 
                 if visited.contains(&coord) {
                     '#'

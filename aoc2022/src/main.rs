@@ -13,6 +13,7 @@ mod day09;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -36,6 +37,7 @@ fn main() {
         10 => day10::run(),
         11 => day11::run(),
         12 => day12::run(),
+        13 => day13::run(),
 
         other => println!("{} was not recognized or is unimplemented", other),
     }
