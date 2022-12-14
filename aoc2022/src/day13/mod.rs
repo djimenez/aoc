@@ -9,21 +9,22 @@ pub fn run() {
 }
 
 fn part1(input: &str) -> usize {
-    let pairs = parse_input(input);
-
-    //dbg!(pairs);
-    pairs
-        .iter()
+    parse_input(input)
+        .chunks(2)
         .enumerate()
-        .filter(|(_, pair)| pair.left.cmp(&pair.right) != Ordering::Greater)
-        .map(|(idx, _)| idx + 1)
+        .filter_map(|(idx, pair)| {
+            if pair[0] <= pair[1] {
+                Some(idx + 1)
+            } else {
+                None
+            }
+        })
         .sum()
 }
 
 fn part2(input: &str) -> usize {
-    let mut packets = parse_input2(input);
+    let mut packets = parse_input(input);
 
-    // sort the packets
     packets.sort();
 
     let divider1 = "[[2]]".parse().unwrap();
@@ -56,32 +57,19 @@ impl PartialEq for PacketData {
 
 impl Ord for PacketData {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self {
-            Self::List(left) => {
-                match other {
-                    Self::List(right) => {
-                        // vec already had lexographic code, use it
-                        left.cmp(right)
-                    }
-
-                    Self::Value(right) => {
-                        // allocating out of convenience
-                        let new_right = PacketData::List(vec![PacketData::Value(*right)]);
-                        self.cmp(&new_right)
-                    }
-                }
+        match (self, other) {
+            (Self::List(left), Self::List(right)) => {
+                // vec already has lexographic code, use it
+                left.cmp(right)
             }
-
-            Self::Value(left) => {
-                match other {
-                    Self::Value(right) => left.cmp(right),
-
-                    Self::List(_right) => {
-                        // allocating out of convenience
-                        let new_left = PacketData::List(vec![PacketData::Value(*left)]);
-                        new_left.cmp(other)
-                    }
-                }
+            (Self::Value(left), Self::Value(right)) => left.cmp(right),
+            (Self::List(left), Self::Value(right)) => {
+                // allocating out of convenience
+                left.cmp(&vec![Self::Value(*right)])
+            }
+            (Self::Value(left), Self::List(right)) => {
+                // allocating out of convenience
+                (&vec![Self::Value(*left)]).cmp(right)
             }
         }
     }
@@ -100,6 +88,24 @@ impl FromStr for PacketData {
         let mut list_stack = Vec::new();
         let mut value = String::new();
 
+        fn maybe_push_value(
+            value: &mut String,
+            list_stack: &mut Vec<Vec<PacketData>>,
+        ) -> Result<(), &'static str> {
+            // check if there's a value to push
+            if value.len() > 0 {
+                let list = list_stack
+                    .last_mut()
+                    .ok_or("no list on stack to push value into")?;
+                list.push(PacketData::Value(
+                    value.parse::<i64>().or(Err("could not parse value"))?,
+                ));
+                value.clear();
+            }
+
+            Ok(())
+        }
+
         for chr in input.chars() {
             match chr {
                 '[' => {
@@ -107,67 +113,33 @@ impl FromStr for PacketData {
                 }
 
                 ']' => {
-                    // check if there's a value to push
-                    if value.len() > 0 {
-                        let list = list_stack.last_mut().unwrap();
-
-                        list.push(PacketData::Value(value.parse::<i64>().unwrap()));
-
-                        value.clear();
-                    }
+                    maybe_push_value(&mut value, &mut list_stack)?;
 
                     // pop the list from the stack and push it as a List
-                    let list = list_stack.pop().unwrap();
+                    let list = list_stack.pop().ok_or("] but no list on stack")?;
 
-                    if list_stack.len() > 0 {
-                        list_stack.last_mut().unwrap().push(PacketData::List(list));
+                    if let Some(last_list) = list_stack.last_mut() {
+                        last_list.push(PacketData::List(list));
                     } else {
                         return Ok(PacketData::List(list));
                     }
                 }
 
                 ',' => {
-                    // check if there's a value to push
-                    if value.len() > 0 {
-                        let list = list_stack.last_mut().unwrap();
-
-                        list.push(PacketData::Value(value.parse().unwrap()));
-
-                        value.clear();
-                    }
+                    maybe_push_value(&mut value, &mut list_stack)?;
                 }
 
-                c => {
-                    value.push(c);
+                _ => {
+                    value.push(chr);
                 }
             }
         }
 
-        Err("could not parse packet")
+        Err("Unexpected end of packet")
     }
 }
 
-#[derive(Debug)]
-struct PacketPair {
-    left: PacketData,
-    right: PacketData,
-}
-
-fn parse_input(input: &str) -> Vec<PacketPair> {
-    input
-        .split("\r\n\r\n")
-        .map(|packets| {
-            let mut lines = packets.lines();
-
-            let left = lines.next().unwrap().parse().unwrap();
-            let right = lines.next().unwrap().parse().unwrap();
-
-            PacketPair { left, right }
-        })
-        .collect()
-}
-
-fn parse_input2(input: &str) -> Vec<PacketData> {
+fn parse_input(input: &str) -> Vec<PacketData> {
     input
         .lines()
         .filter(|line| line.len() > 0)
