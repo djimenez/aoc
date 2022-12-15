@@ -9,4 +9,4 @@ if [[ -z "$DAY" ]]; then
     echo "Using day $DAY by default..."
 fi
 
-cargo watch -x "test $DAY -- --nocapture" -x "run -- $DAY"
+cargo watch -x "test $DAY -- --nocapture" -x "run --release -- $DAY"
