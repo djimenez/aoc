@@ -16,12 +16,12 @@ struct State {
     max_ticks: usize,
     ticks: usize,
 
-    previous: u64, // location as index
     location: u64, // location as index
+    traveling: usize,
 
     ele_turn: bool,
-    ele_previous: u64,
     ele_location: u64,
+    ele_traveling: usize,
 
     valves: u64,  // used as bitfield
     visited: u64, // used as bitfield
@@ -36,7 +36,12 @@ impl Ord for State {
         let min_predicted_other =
             other.flow + other.flow_rate * (other.max_ticks - other.ticks) as u64;
 
-        min_predicted_self.cmp(&min_predicted_other)
+        //min_predicted_self.cmp(&min_predicted_other)
+
+        // ticks left, valves open, min predicted flow
+        //(self.max_ticks - self.ticks, self.valves.count_ones(), min_predicted_self).cmp(&(other.max_ticks - other.ticks, other.valves.count_ones(), min_predicted_other))
+        (min_predicted_self, self.max_ticks - self.ticks)
+            .cmp(&(min_predicted_other, self.max_ticks - self.ticks))
     }
 }
 
@@ -47,13 +52,17 @@ impl PartialOrd for State {
 }
 
 fn part1(input: &str) -> u64 {
-    let valves = parse_input(input);
+    let mut valves = parse_input(input);
+    //valves_as_graphviz(&valves);
+
+    colaesce_tunnels(&mut valves);
+    //valves_as_graphviz(&valves);
+    //dbg!(&valves);
+
     let graph: HashMap<&str, &Valve> = valves
         .iter()
         .map(|valve| (valve.name.as_str(), valve))
         .collect();
-
-    //valves_as_graphviz(&valves);
 
     let max_flow_rate: u64 = valves.iter().map(|valve| valve.flow_rate).sum();
 
@@ -65,12 +74,12 @@ fn part1(input: &str) -> u64 {
         max_ticks: 30,
         ticks: 0,
 
-        previous: start.idx,
         location: start.idx,
+        traveling: 0,
 
         ele_turn: false,
-        ele_previous: start.idx,
         ele_location: start.idx,
+        ele_traveling: 0,
 
         valves: 0,
         visited: 0,
@@ -87,6 +96,10 @@ fn part1(input: &str) -> u64 {
         state.ticks += 1;
         state.flow += state.flow_rate;
 
+        if state.traveling > 0 {
+            state.traveling -= 1;
+        }
+
         //dbg!(&state);
 
         let predicted_flow = state.flow + state.flow_rate * (state.max_ticks - state.ticks) as u64;
@@ -98,14 +111,19 @@ fn part1(input: &str) -> u64 {
 
         if state.ticks < state.max_ticks {
             // trim poor performing branches
-            if max_flow > state.flow + max_flow_rate * (state.max_ticks - state.ticks) as u64 {
+            if max_flow >= state.flow + max_flow_rate * (state.max_ticks - state.ticks) as u64 {
+                continue;
+            }
+
+            // if we're still traveling, just requeue ourselves
+            if state.traveling > 0 {
+                queue.push(state);
                 continue;
             }
 
             let current_valve = &valves[state.location as usize];
 
-            // if the current valve isn't on, push a state to turn it on
-            // note: ignore valves with 0 flow rate
+            // if the current valve has flow rate and isn't on, push a state to turn it on
             if current_valve.flow_rate > 0 && state.valves & (1 << state.location) == 0 {
                 let mut valve_state = state.clone();
 
@@ -116,19 +134,15 @@ fn part1(input: &str) -> u64 {
             }
 
             for connection in &current_valve.connections {
-                let connection_valve = &graph[connection.as_str()];
+                let connection_valve = &graph[connection.destination.as_str()];
+                let mut connection_state = state.clone();
 
-                // avoid returning to a previous node if our current one is a 0 flow rate
-                // we want to promote continuing through these nodes
-                if current_valve.flow_rate > 0 || connection_valve.idx != state.previous {
-                    let mut connection_state = state.clone();
+                connection_state.location = connection_valve.idx;
+                connection_state.visited |= 1 << connection_valve.idx;
 
-                    connection_state.previous = state.location;
-                    connection_state.location = connection_valve.idx;
-                    connection_state.visited |= 1 << connection_valve.idx;
+                connection_state.traveling = connection.cost;
 
-                    queue.push(connection_state);
-                }
+                queue.push(connection_state);
             }
         }
     }
@@ -137,13 +151,17 @@ fn part1(input: &str) -> u64 {
 }
 
 fn part2(input: &str) -> u64 {
-    let valves = parse_input(input);
+    let mut valves = parse_input(input);
+    //valves_as_graphviz(&valves);
+
+    colaesce_tunnels(&mut valves);
+    //valves_as_graphviz(&valves);
+    //dbg!(&valves);
+
     let graph: HashMap<&str, &Valve> = valves
         .iter()
         .map(|valve| (valve.name.as_str(), valve))
         .collect();
-
-    //valves_as_graphviz(&valves);
 
     let max_flow_rate: u64 = valves.iter().map(|valve| valve.flow_rate).sum();
 
@@ -155,12 +173,12 @@ fn part2(input: &str) -> u64 {
         max_ticks: 26,
         ticks: 0,
 
-        previous: start.idx,
         location: start.idx,
+        traveling: 0,
 
         ele_turn: false,
-        ele_previous: start.idx,
         ele_location: start.idx,
+        ele_traveling: 0,
 
         valves: 0,
         visited: 0,
@@ -185,27 +203,41 @@ fn part2(input: &str) -> u64 {
                 max_flow = predicted_flow;
                 //println!("max flow: {max_flow} @ {} of {max_flow_rate} in {}", state.flow_rate, state.ticks);
             }
+        } else {
+            if state.traveling > 0 {
+                state.traveling -= 1;
+            }
+
+            if state.ele_traveling > 0 {
+                state.ele_traveling -= 1;
+            }
         }
 
         //dbg!(&state);
 
         if state.ticks < state.max_ticks {
             // trim poor performing branches
-            if !state.ele_turn
-                && max_flow > state.flow + max_flow_rate * (state.max_ticks - state.ticks) as u64
-            {
+            if max_flow >= state.flow + max_flow_rate * (state.max_ticks - state.ticks) as u64 {
                 continue;
             }
 
-            let previous;
+            let traveling;
             let location;
 
             if state.ele_turn {
-                previous = state.ele_previous;
+                traveling = state.ele_traveling;
                 location = state.ele_location;
             } else {
-                previous = state.previous;
+                traveling = state.traveling;
                 location = state.location;
+            }
+
+            // if we're still traveling push ourself on queue in next turn
+            if traveling > 0 {
+                state.ele_turn = !state.ele_turn;
+
+                queue.push(state);
+                continue;
             }
 
             let current_valve = &valves[location as usize];
@@ -223,31 +255,27 @@ fn part2(input: &str) -> u64 {
             }
 
             for connection in &current_valve.connections {
-                let connection_valve = &graph[connection.as_str()];
+                let connection_valve = &graph[connection.destination.as_str()];
 
                 // avoid the elephant coming to the same node as us
                 if state.ele_turn && connection_valve.idx == state.location {
                     continue;
                 }
 
-                // avoid returning to a previous node if our current one is a 0 flow rate
-                // we want to promote continuing through these nodes
-                if current_valve.flow_rate > 0 || connection_valve.idx != previous {
-                    let mut connection_state = state.clone();
-                    connection_state.ele_turn = !state.ele_turn;
+                let mut connection_state = state.clone();
+                connection_state.ele_turn = !state.ele_turn;
 
-                    if state.ele_turn {
-                        connection_state.ele_previous = location;
-                        connection_state.ele_location = connection_valve.idx;
-                    } else {
-                        connection_state.previous = location;
-                        connection_state.location = connection_valve.idx;
-                    }
-
-                    connection_state.visited |= 1 << connection_valve.idx;
-
-                    queue.push(connection_state);
+                if state.ele_turn {
+                    connection_state.ele_location = connection_valve.idx;
+                    connection_state.ele_traveling = connection.cost;
+                } else {
+                    connection_state.location = connection_valve.idx;
+                    connection_state.traveling = connection.cost;
                 }
+
+                connection_state.visited |= 1 << connection_valve.idx;
+
+                queue.push(connection_state);
             }
         }
     }
@@ -260,7 +288,13 @@ struct Valve {
     idx: u64,
     name: String,
     flow_rate: u64,
-    connections: Vec<String>,
+    connections: Vec<Tunnel>,
+}
+
+#[derive(Debug)]
+struct Tunnel {
+    destination: String,
+    cost: usize,
 }
 
 fn parse_input(input: &str) -> Vec<Valve> {
@@ -277,11 +311,73 @@ fn parse_input(input: &str) -> Vec<Valve> {
                 flow_rate: captures[2].parse().unwrap(),
                 connections: captures[3]
                     .split(", ")
-                    .map(|str| String::from(str))
+                    .map(|str| Tunnel {
+                        destination: String::from(str),
+                        cost: 1,
+                    })
                     .collect(),
             }
         })
         .collect()
+}
+
+fn colaesce_tunnels(valves: &mut Vec<Valve>) {
+    // look for junctions that have 0 flow rate and 2 connections - do not remove AA (start point)
+    while let Some(candidate_idx) = valves.iter().position(|valve| {
+        valve.name != "AA" && valve.flow_rate == 0 && valve.connections.len() == 2
+    }) {
+        let candidate = valves.remove(candidate_idx);
+
+        let Tunnel {
+            destination: left_id,
+            cost: left_cost,
+        } = &candidate.connections[0];
+        let Tunnel {
+            destination: right_id,
+            cost: right_cost,
+        } = &candidate.connections[1];
+
+        let total_cost = left_cost + right_cost;
+
+        let left_idx = valves
+            .iter()
+            .position(|valve| &valve.name == left_id)
+            .unwrap();
+        let right_idx = valves
+            .iter()
+            .position(|valve| &valve.name == right_id)
+            .unwrap();
+
+        let left = &mut valves[left_idx];
+
+        let left_connection_idx = left
+            .connections
+            .iter()
+            .position(|tunnel| tunnel.destination == candidate.name)
+            .unwrap();
+        let mut left_connection = &mut left.connections[left_connection_idx];
+
+        left_connection.destination = String::from(right_id);
+        left_connection.cost = total_cost;
+
+        let right = &mut valves[right_idx];
+
+        let right_connection_idx = right
+            .connections
+            .iter()
+            .position(|tunnel| tunnel.destination == candidate.name)
+            .unwrap();
+        let mut right_connection = &mut right.connections[right_connection_idx];
+
+        right_connection.destination = String::from(left_id);
+        right_connection.cost = total_cost;
+    }
+
+    // fixup idx values
+    valves
+        .iter_mut()
+        .enumerate()
+        .for_each(|(idx, valve)| valve.idx = idx as u64);
 }
 
 #[allow(dead_code)]
@@ -301,8 +397,8 @@ fn valves_as_graphviz(valves: &Vec<Valve>) {
         connected.insert(valve.name.as_str());
 
         for connection in &valve.connections {
-            if !connected.contains(connection.as_str()) {
-                println!("{} -- {}", valve.name, connection);
+            if !connected.contains(connection.destination.as_str()) {
+                println!("{} -- {}", valve.name, connection.destination);
             }
         }
     }
