@@ -1,3 +1,5 @@
+//#![feature(box_syntax, box_patterns)]
+
 use std::env;
 
 mod day00;
@@ -21,6 +23,7 @@ mod day17;
 mod day18;
 mod day19;
 mod day20;
+mod day21;
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -52,6 +55,7 @@ fn main() {
         18 => day18::run(),
         19 => day19::run(),
         20 => day20::run(),
+        21 => day21::run(),
 
         other => println!("{} was not recognized or is unimplemented", other),
     }
